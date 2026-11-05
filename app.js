@@ -35,7 +35,7 @@
    const context = form === 'Отзыв' ? 'о книге' : form === 'отзЫв' ? 'посла из страны' : '';
    return { id: 'stress-' + form, task: 4, kind: 'stress', prompt: word,
      before: word.slice(0, position), after: word.slice(position + 1),
-     spelling: word[position] + (word[position] === 'ё' ? '' : '\u0301'),
+     spelling: word[position],
      answer: String(position), context };
  });
  const cards = [...(window.EGE_CARDS || []), ...stressCards];
