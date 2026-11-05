@@ -25,3 +25,8 @@
   font: inherit;
   line-height: 1;
 }
+
+.rule-toggle {display:inline-grid;place-items:center;vertical-align:middle;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;color:var(--muted);font:22px/1 system-ui;cursor:pointer}
+.rule-toggle:focus-visible {outline:2px solid currentColor;border-radius:50%}
+.rule-note {margin:4px auto 12px;max-width:44ch;color:var(--muted);font:16px/1.45 system-ui;overflow-wrap:anywhere}
+.rule-note[hidden] {display:none}
