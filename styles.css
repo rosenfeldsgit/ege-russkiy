@@ -30,3 +30,5 @@
 .rule-toggle:focus-visible {outline:2px solid currentColor;border-radius:50%}
 .rule-note {margin:4px auto 12px;max-width:44ch;color:var(--muted);font:16px/1.45 system-ui;overflow-wrap:anywhere}
 .rule-note[hidden] {display:none}
+
+.rule-note { white-space: pre-line; }
