@@ -46,7 +46,7 @@
  let selectedSlots = new Set();
  const random=n=>Math.floor(Math.random()*n);
  function shuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=random(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
- function solution(node,c){if(c.kind === 'punctuation'){node.replaceChildren();c.parts.forEach((part,index)=>{node.append(document.createTextNode(part));if(index<c.parts.length-1){if(c.answer.includes(index)){const m=document.createElement('mark');m.textContent=c.mark;node.append(m);}node.append(document.createTextNode(' '));}});return;}node.replaceChildren(document.createTextNode(c.before));const m=document.createElement('mark');m.textContent=c.spelling||c.answer;node.append(m,document.createTextNode(c.after));}
+ function solution(node,c){if(c.kind === 'punctuation'){node.replaceChildren();c.parts.forEach((part,index)=>{node.append(document.createTextNode(part));if(index<c.parts.length-1){if(c.answer.includes(index)){const m=document.createElement('mark');m.textContent=c.mark==='—'?' —':c.mark;node.append(m);}node.append(document.createTextNode(' '));}});return;}node.replaceChildren(document.createTextNode(c.before));const m=document.createElement('mark');m.textContent=c.spelling||c.answer;node.append(m,document.createTextNode(c.after));}
  function addExplanation(item, word, card) {
    let hint = card.explanation || window.EGE_HINTS?.get(card.id);
    if (card.kind === 'stress') {
@@ -108,7 +108,7 @@
      button.className = 'option punct-slot';
      button.dataset.value = String(index);
      button.textContent = '·';
-     button.setAttribute('aria-label', 'Запятая после «' + part + '»');
+     button.setAttribute('aria-label', ({',':'Запятая',':':'Двоеточие','—':'Тире'}[card.mark]) + ' после «' + part + '»');
      button.setAttribute('aria-pressed', 'false');
      button.addEventListener('click', () => {
        if (locked) return;
@@ -168,7 +168,7 @@
     const right = $('word').querySelector('.right');
     right.textContent = current.prompt[Number(current.answer)];
   } else if (!punctuation) solution($('word'),current);
-  $('feedback').textContent=good ? (punctuation && !current.answer.length ? 'Верно! Запятые не нужны.' : 'Верно!') : 'Вы ошиблись.';$('feedback').className='feedback'+(good?'':' error');
+  $('feedback').textContent=good ? (punctuation && !current.answer.length ? 'Верно! ' + ({',':'Запятые',':':'Двоеточия','—':'Тире'}[current.mark]) + ' не нужны.' : 'Верно!') : 'Вы ошиблись.';$('feedback').className='feedback'+(good?'':' error');
   timer=setTimeout(chooseNext,punctuation ? (good?1800:3000) : good?600:1200);
  }
  function select(id){
