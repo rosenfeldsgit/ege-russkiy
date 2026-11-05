@@ -38,9 +38,41 @@
      spelling: word[position],
      answer: String(position), context };
  });
- const cards = [...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])];
+ const wordChoiceCards = [
+   {
+     "id": "task1-50641",
+     "task": 1,
+     "kind": "word-choice",
+     "instruction": "Подберите притяжательное местоимение",
+     "before": "Даль знал мысли и чаяния простых людей, ",
+     "after": " психологию.",
+     "answer": "их",
+     "options": [
+       "их",
+       "его",
+       "свою"
+     ],
+     "explanation": "Психологию чью? Простых людей → их. «Свою» относилось бы к самому Далю."
+   },
+   {
+     "id": "task1-50675",
+     "task": 1,
+     "kind": "word-choice",
+     "instruction": "Подберите условный союз",
+     "before": "",
+     "after": " человек высший смысл видит в куске прожаренного мяса, то ему подвиг Гумбольдта покажется вздорным сумасбродством.",
+     "answer": "Если",
+     "options": [
+       "Если",
+       "Хотя",
+       "Поскольку"
+     ],
+     "explanation": "«Если …, то …» — условие и его следствие. «Хотя» выражает уступку, «поскольку» — причину."
+   }
+ ];
+ const cards = [...wordChoiceCards, ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])];
  const $=id=>document.getElementById(id);
- const sections=[['all','Все подряд'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение'],['punctuation','Пунктуация']];
+ const sections=[['all','Все подряд'],['1','1'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение'],['punctuation','Пунктуация']];
  let pool=[],current=null,timer=null,locked=false,correct=0,wrong=0;
  const mistakes=new Map();
  let selectedSlots = new Set();
@@ -132,13 +164,13 @@
   const available=pool.length>1?pool.filter(c=>c.id!==current?.id):pool;
   current=available[random(available.length)];
   const punctuation = current.kind === 'punctuation';
-  const phrase=current.kind==='spelling'||current.kind==='join';
-  $('instruction').textContent=punctuation ? current.instruction : phrase?'Выбери написание':'';
+  const phrase=['spelling','join','word-choice'].includes(current.kind);
+  $('instruction').textContent=current.instruction || (phrase?'Выбери написание':'');
   $('instruction').hidden=!(phrase || punctuation);
   $('check-answer').hidden=!punctuation;
   $('check-answer').disabled=false;
   $('word').classList.toggle('punctuation-word', punctuation);
-  $('word').textContent=current.kind==='spelling'?(current.context||current.prompt):current.prompt;
+  $('word').textContent=current.kind==='word-choice'?current.before+'___'+current.after:current.kind==='spelling'?(current.context||current.prompt):current.prompt;
   $('word').classList.toggle('sentence',phrase);
   $('word').classList.toggle('long',(current.prompt || '').length>23||current.kind==='spelling');
   $('context').textContent=current.kind==='spelling'?'':current.context || '';
@@ -154,7 +186,7 @@
     showStress(current);
     return;
   }
-  (current.kind==='join'?current.options:shuffle(current.options)).forEach(value=>{const b=document.createElement('button');b.type='button';b.className='option'+((current.kind==='spelling'||current.kind==='join')?' phrase':'');b.textContent=value==='∅'?'нет буквы':value;b.dataset.value=value;b.addEventListener('click',()=>answer(value));$('options').append(b);});
+  (current.kind==='join'?current.options:shuffle(current.options)).forEach(value=>{const b=document.createElement('button');b.type='button';b.className='option'+(phrase?' phrase':'');b.textContent=value==='∅'?'нет буквы':value;b.dataset.value=value;b.addEventListener('click',()=>answer(value));$('options').append(b);});
  }
  function answer(value){
   if(locked||!current)return;locked=true;
