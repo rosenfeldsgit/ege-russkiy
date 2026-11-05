@@ -38,16 +38,17 @@
      spelling: word[position],
      answer: String(position), context };
  });
- const cards = [...(window.EGE_CARDS || []), ...stressCards];
+ const cards = [...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])];
  const $=id=>document.getElementById(id);
- const sections=[['all','Все подряд'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение']];
+ const sections=[['all','Все подряд'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение'],['punctuation','Пунктуация']];
  let pool=[],current=null,timer=null,locked=false,correct=0,wrong=0;
  const mistakes=new Map();
+ let selectedSlots = new Set();
  const random=n=>Math.floor(Math.random()*n);
  function shuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=random(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
- function solution(node,c){node.replaceChildren(document.createTextNode(c.before));const m=document.createElement('mark');m.textContent=c.spelling||c.answer;node.append(m,document.createTextNode(c.after));}
+ function solution(node,c){if(c.kind === 'punctuation'){node.replaceChildren();c.parts.forEach((part,index)=>{node.append(document.createTextNode(part));if(index<c.parts.length-1){if(c.answer.includes(index)){const m=document.createElement('mark');m.textContent=c.mark;node.append(m);}node.append(document.createTextNode(' '));}});return;}node.replaceChildren(document.createTextNode(c.before));const m=document.createElement('mark');m.textContent=c.spelling||c.answer;node.append(m,document.createTextNode(c.after));}
  function addExplanation(item, word, card) {
-   let hint = window.EGE_HINTS?.get(card.id);
+   let hint = card.explanation || window.EGE_HINTS?.get(card.id);
    if (card.kind === 'stress') {
      const syllable = (card.before.match(/[аеёиоуыэюя]/g) || []).length + 1;
      hint = 'Словарное ударение падает на ' + syllable + '-й слог: ' +
@@ -63,7 +64,7 @@
    toggle.type = 'button';
    toggle.className = 'rule-toggle';
    toggle.textContent = 'ⓘ';
-   toggle.setAttribute('aria-label', 'Пояснение к слову «' + (card.kind === 'stress' ? card.prompt : card.spelling || card.before + card.answer + card.after) + '»');
+   toggle.setAttribute('aria-label', 'Пояснение к ' + (card.kind === 'punctuation' ? 'предложению' : 'слову «' + (card.kind === 'stress' ? card.prompt : card.spelling || card.before + card.answer + card.after) + '»') );
    toggle.setAttribute('aria-controls', note.id);
    toggle.setAttribute('aria-expanded', 'false');
    toggle.addEventListener('click', () => {
@@ -94,8 +95,35 @@
      word.append(button);
    });
  }
+
+ function showPunctuation(card) {
+   const word = $('word');
+   word.replaceChildren();
+   selectedSlots = new Set();
+   card.parts.forEach((part, index) => {
+     word.append(document.createTextNode(part));
+     if (index === card.parts.length - 1) return;
+     const button = document.createElement('button');
+     button.type = 'button';
+     button.className = 'option punct-slot';
+     button.dataset.value = String(index);
+     button.textContent = '·';
+     button.setAttribute('aria-label', 'Запятая после «' + part + '»');
+     button.setAttribute('aria-pressed', 'false');
+     button.addEventListener('click', () => {
+       if (locked) return;
+       if (selectedSlots.has(index)) selectedSlots.delete(index);
+       else selectedSlots.add(index);
+       const selected = selectedSlots.has(index);
+       button.textContent = selected ? card.mark : '·';
+       button.classList.toggle('selected', selected);
+       button.setAttribute('aria-pressed', String(selected));
+     });
+     word.append(document.createTextNode(' '), button, document.createTextNode(' '));
+   });
+ }
  function choices() {
-   return (current?.kind === 'stress' ? $('word') : $('options')).querySelectorAll('button');
+   return (['stress', 'punctuation'].includes(current?.kind) ? $('word') : $('options')).querySelectorAll('button');
  }
  function chooseNext(){
   clearTimeout(timer);timer=null;locked=false;
@@ -103,17 +131,25 @@
   // Uniform independent draws; exclude only the immediately preceding card.
   const available=pool.length>1?pool.filter(c=>c.id!==current?.id):pool;
   current=available[random(available.length)];
+  const punctuation = current.kind === 'punctuation';
   const phrase=current.kind==='spelling'||current.kind==='join';
-  $('instruction').textContent=phrase?'Выбери написание':'';
-  $('instruction').hidden=!phrase;
+  $('instruction').textContent=punctuation ? current.instruction : phrase?'Выбери написание':'';
+  $('instruction').hidden=!(phrase || punctuation);
+  $('check-answer').hidden=!punctuation;
+  $('check-answer').disabled=false;
+  $('word').classList.toggle('punctuation-word', punctuation);
   $('word').textContent=current.kind==='spelling'?(current.context||current.prompt):current.prompt;
   $('word').classList.toggle('sentence',phrase);
-  $('word').classList.toggle('long',current.prompt.length>23||current.kind==='spelling');
-  $('context').textContent=current.kind==='spelling'?'':current.context;
+  $('word').classList.toggle('long',(current.prompt || '').length>23||current.kind==='spelling');
+  $('context').textContent=current.kind==='spelling'?'':current.context || '';
   $('feedback').textContent='';$('feedback').className='feedback';
   $('task-label').textContent=`Задание ${current.task}`;
   $('options').replaceChildren();
   $('word').classList.toggle('stress-word', current.kind === 'stress');
+  if (punctuation) {
+    showPunctuation(current);
+    return;
+  }
   if (current.kind === 'stress') {
     showStress(current);
     return;
@@ -122,27 +158,30 @@
  }
  function answer(value){
   if(locked||!current)return;locked=true;
-  const good=value===current.answer;
+  const punctuation = current.kind === 'punctuation';
+  const good=punctuation ? selectedSlots.size===current.answer.length && current.answer.every(index=>selectedSlots.has(index)) : value===current.answer;
+  $('check-answer').disabled=true;
   if(good)correct++;else{wrong++;if(!mistakes.has(current.id)){mistakes.set(current.id,current);const li=document.createElement('li'),w=document.createElement('div');w.className='mistake-word';solution(w,current);li.append(w);if(current.context){const s=document.createElement('small');s.textContent=current.context;li.append(s);}addExplanation(li,w,current);$('mistake-list').prepend(li);}$('empty').hidden=true;}
   $('correct').textContent=correct;$('wrong').textContent=wrong;
-  for(const b of choices()){b.disabled=true;if(b.dataset.value===current.answer)b.classList.add('right');else if(b.dataset.value===value)b.classList.add('wrong');}
+  for(const b of choices()){b.disabled=true;if(punctuation){const index=Number(b.dataset.value);const expected=current.answer.includes(index);b.textContent=expected || selectedSlots.has(index) ? current.mark : '·';b.classList.add(expected===selectedSlots.has(index)?'right':'wrong');continue;}if(b.dataset.value===current.answer)b.classList.add('right');else if(b.dataset.value===value)b.classList.add('wrong');}
   if (current.kind === 'stress') {
     const right = $('word').querySelector('.right');
     right.textContent = current.prompt[Number(current.answer)];
-  } else solution($('word'),current);
-  $('feedback').textContent=good?'Верно!':'Вы ошиблись.';$('feedback').className='feedback'+(good?'':' error');
-  timer=setTimeout(chooseNext,good?600:1200);
+  } else if (!punctuation) solution($('word'),current);
+  $('feedback').textContent=good ? (punctuation && !current.answer.length ? 'Верно! Запятые не нужны.' : 'Верно!') : 'Вы ошиблись.';$('feedback').className='feedback'+(good?'':' error');
+  timer=setTimeout(chooseNext,punctuation ? (good?1800:3000) : good?600:1200);
  }
  function select(id){
   clearTimeout(timer);timer=null;current=null;locked=false;$('instruction').hidden=true;
   correct=wrong=0;mistakes.clear();$('correct').textContent='0';$('wrong').textContent='0';$('mistake-list').replaceChildren();$('empty').hidden=false;
   for(const b of $('sections').children)b.setAttribute('aria-pressed',String(b.dataset.section===id));
-  pool = id === 'all' ? cards : id === 'stress' ? stressCards : cards.filter(c => c.task === Number(id));
+  pool = id === 'all' ? cards : id === 'stress' ? stressCards : id === 'punctuation' ? (window.EGE_PUNCTUATION || []) : cards.filter(c => c.task === Number(id));
   if(!pool.length){$('word').textContent='Не удалось загрузить карточки';$('context').textContent='Проверьте, что файл cards.js находится рядом с index.html.';$('skip').hidden=true;return;}
   chooseNext();
  }
  sections.forEach(([id,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.section=id;b.setAttribute('aria-label',/^\d+$/.test(id)?`Задание ${id}`:label);b.addEventListener('click',()=>select(id));$('sections').append(b);});
+ $('check-answer').addEventListener('click', () => { if (current?.kind === 'punctuation') answer(); });
  $('skip').addEventListener('click',chooseNext);
- document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||locked)return;const n=Number(e.key);if(n>=1&&n<=9){const b=choices()[n-1];if(b){e.preventDefault();b.click();}}});
+ document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||locked)return;if (e.key === 'Enter' && current?.kind === 'punctuation' && e.target?.tagName !== 'BUTTON') { e.preventDefault(); answer(); return; }const n=Number(e.key);if(n>=1&&n<=9){const b=choices()[n-1];if(b){e.preventDefault();b.click();}}});
  select('all');
 })();
