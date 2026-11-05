@@ -52,7 +52,7 @@
   font: 30px/1 Georgia, serif;
   color: var(--muted);
 }
-.punct-slot.selected { background: #e9edf3; border-color: #7e8fa6; color: var(--ink); }
+.punct-slot.selected:not(:disabled) { background: #e9edf3; border-color: #7e8fa6; color: var(--ink); }
 .check-answer {
   margin-top: 22px;
   padding: 12px 27px;
