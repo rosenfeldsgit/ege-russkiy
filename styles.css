@@ -6,3 +6,22 @@
 @media(max-width:520px){.instruction{font-size:13px}.word.sentence,.word.sentence.long{font-size:25px}}
 
 @media(max-width:520px){.word.sentence,.word.sentence.long{font-size:clamp(20px,5.6vw,25px);line-height:1.35}.exercise{min-width:0}.word.sentence{width:100%;text-wrap:pretty}}
+
+.exercise { container-type: inline-size; }
+.word.stress-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: min(52px, calc(96cqi / var(--units)));
+  white-space: nowrap;
+}
+.stress-word .vowel {
+  flex: none;
+  min-width: 0;
+  min-height: 0;
+  width: 1.45em;
+  height: 1.45em;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+}
