@@ -32,3 +32,37 @@
 .rule-note[hidden] {display:none}
 
 .rule-note { white-space: pre-line; }
+
+.word.punctuation-word {
+  font-size: clamp(23px, 3.6vw, 31px);
+  line-height: 2.1;
+  text-align: center;
+  overflow-wrap: normal;
+}
+.punctuation-word .punct-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0 6px;
+  font: 30px/1 Georgia, serif;
+  color: var(--muted);
+}
+.punct-slot.selected { background: #e9edf3; border-color: #7e8fa6; color: var(--ink); }
+.check-answer {
+  margin-top: 22px;
+  padding: 12px 27px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 16px;
+}
+.check-answer:disabled { opacity: .55; cursor: default; }
+@media (max-width: 520px) {
+  .word.punctuation-word { font-size: 23px; line-height: 2.3; }
+}
