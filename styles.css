@@ -2,5 +2,7 @@
 
 
 .instruction{font-size:14px;line-height:1.4;color:var(--muted);margin-bottom:16px}
-.word.sentence,.word.sentence.long{font-size:clamp(25px,3.5vw,36px);line-height:1.5;overflow-wrap:normal}
+.word.sentence,.word.sentence.long{font-size:clamp(25px,3.5vw,36px);line-height:1.5;overflow-wrap:anywhere}
 @media(max-width:520px){.instruction{font-size:13px}.word.sentence,.word.sentence.long{font-size:25px}}
+
+@media(max-width:520px){.word.sentence,.word.sentence.long{font-size:clamp(20px,5.6vw,25px);line-height:1.35}.exercise{min-width:0}.word.sentence{width:100%;text-wrap:pretty}}
