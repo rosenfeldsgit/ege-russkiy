@@ -46,6 +46,33 @@
  const random=n=>Math.floor(Math.random()*n);
  function shuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=random(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
  function solution(node,c){node.replaceChildren(document.createTextNode(c.before));const m=document.createElement('mark');m.textContent=c.spelling||c.answer;node.append(m,document.createTextNode(c.after));}
+ function addExplanation(item, word, card) {
+   let hint = window.EGE_HINTS?.get(card.id);
+   if (card.kind === 'stress') {
+     const syllable = (card.before.match(/[аеёиоуыэюя]/g) || []).length + 1;
+     hint = 'Словарное ударение падает на ' + syllable + '-й слог: ' +
+       card.before + card.spelling.toUpperCase() + card.after + '.';
+   }
+   if (!hint) return;
+   const note = document.createElement('p');
+   note.className = 'rule-note';
+   note.id = 'rule-' + card.id;
+   note.textContent = hint;
+   note.hidden = true;
+   const toggle = document.createElement('button');
+   toggle.type = 'button';
+   toggle.className = 'rule-toggle';
+   toggle.textContent = 'ⓘ';
+   toggle.setAttribute('aria-label', 'Пояснение к слову «' + (card.kind === 'stress' ? card.prompt : card.spelling || card.before + card.answer + card.after) + '»');
+   toggle.setAttribute('aria-controls', note.id);
+   toggle.setAttribute('aria-expanded', 'false');
+   toggle.addEventListener('click', () => {
+     note.hidden = !note.hidden;
+     toggle.setAttribute('aria-expanded', String(!note.hidden));
+   });
+   word.append(toggle);
+   item.append(note);
+ }
  function showStress(card) {
    const word = $('word');
    word.replaceChildren();
@@ -96,7 +123,7 @@
  function answer(value){
   if(locked||!current)return;locked=true;
   const good=value===current.answer;
-  if(good)correct++;else{wrong++;if(!mistakes.has(current.id)){mistakes.set(current.id,current);const li=document.createElement('li'),w=document.createElement('div');w.className='mistake-word';solution(w,current);li.append(w);if(current.context){const s=document.createElement('small');s.textContent=current.context;li.append(s);}$('mistake-list').prepend(li);}$('empty').hidden=true;}
+  if(good)correct++;else{wrong++;if(!mistakes.has(current.id)){mistakes.set(current.id,current);const li=document.createElement('li'),w=document.createElement('div');w.className='mistake-word';solution(w,current);li.append(w);if(current.context){const s=document.createElement('small');s.textContent=current.context;li.append(s);}addExplanation(li,w,current);$('mistake-list').prepend(li);}$('empty').hidden=true;}
   $('correct').textContent=correct;$('wrong').textContent=wrong;
   for(const b of choices()){b.disabled=true;if(b.dataset.value===current.answer)b.classList.add('right');else if(b.dataset.value===value)b.classList.add('wrong');}
   if (current.kind === 'stress') {
