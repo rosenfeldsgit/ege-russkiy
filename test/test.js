@@ -157,6 +157,10 @@
         formattedText(block, text);
         review.append(block);
       }
+      const correctAnswer = document.createElement('p');
+      correctAnswer.className = 'review-answer';
+      correctAnswer.textContent = 'Ответ: ' + question.answers.join(' / ');
+      review.append(correctAnswer);
       const explanation = document.createElement('p');
       explanation.className = 'review-explanation';
       explanation.textContent = question.explanation;

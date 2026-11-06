@@ -2,3 +2,9 @@
 
 
 .review-question{min-width:230px;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px 0}.review-question .question{font-size:17px;margin-bottom:20px}.review-explanation{border-top:1px dashed var(--border,#ccd1dc);padding-top:16px;line-height:1.6}.review-question strong{font-weight:600}
+
+/* Разбор: компактное условие и заметный ответ. */
+.review-question .question{font-size:14px;line-height:1.6;margin-bottom:16px}
+.review-answer{font:400 28px/1.4 Georgia,serif;color:var(--green);margin:22px 0 12px}
+.review-explanation{font-size:20px;line-height:1.55;margin:12px 0 18px;padding-top:16px}
+@media(max-width:520px){.review-question .question{font-size:13px}.review-answer{font-size:25px}.review-explanation{font-size:18px}}
