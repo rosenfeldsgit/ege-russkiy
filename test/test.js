@@ -67,9 +67,9 @@
     saveTime();
     session.index = index;
     const question = session.questions[index];
-    $('question-title').textContent = `Задание ${question.task}`;
+    $('question-title').textContent = `Задание ${question.task} · #${question.displayId}`;
     $('weight').textContent = `${question.maxPrimary} ${question.maxPrimary === 1 ? 'балл' : 'балла'}`;
-    $('source').textContent = `${question.source.title} · вариант ${question.source.variant} · стр. ${question.source.page}`;
+    $('source').textContent = question.source.title;
     formattedText($('passage'), question.passage || '');
     $('passage').hidden = !question.passage;
     formattedText($('question'), question.prompt);
@@ -138,13 +138,45 @@
         cell.textContent = value;
         if (column === 0) {
           const source = document.createElement('small');
-          source.textContent = `${question.source.title}, вариант ${question.source.variant}`;
+          source.textContent = `${question.source.title} · #${question.displayId}`;
           cell.append(source);
         }
         if (column === 3) cell.className = points === question.maxPrimary ? 'score-full' : points ? 'score-partial' : 'score-zero';
         row.append(cell);
       });
-      $('result-rows').append(row);
+      const detailRow = document.createElement('tr');
+      detailRow.hidden = true;
+      const detailCell = document.createElement('td');
+      detailCell.colSpan = 5;
+      const review = document.createElement('article');
+      review.className = 'review-question';
+      for (const text of [question.passage, question.prompt]) {
+        if (!text) continue;
+        const block = document.createElement('div');
+        block.className = 'question';
+        formattedText(block, text);
+        review.append(block);
+      }
+      const explanation = document.createElement('p');
+      explanation.className = 'review-explanation';
+      explanation.textContent = question.explanation;
+      review.append(explanation);
+      detailCell.append(review);
+      detailRow.append(detailCell);
+      detailRow.id = 'review-' + question.displayId;
+      const info = document.createElement('button');
+      info.type = 'button';
+      info.className = 'rule-toggle';
+      info.textContent = 'ⓘ';
+      info.setAttribute('aria-label', 'Задание и объяснение #' + question.displayId);
+      info.setAttribute('aria-expanded', 'false');
+      info.setAttribute('aria-controls', detailRow.id);
+      info.addEventListener('click', () => {
+        detailRow.hidden = !detailRow.hidden;
+        info.setAttribute('aria-expanded', String(!detailRow.hidden));
+      });
+      row.children[0].append(info);
+      $('result-rows').append(row, detailRow);
     });
     $('result-summary').textContent = `${total} из ${maximum} первичных баллов · ${time(duration)}`;
     $('conversion').textContent = `По предоставленной шкале ${total} первичных → ${config.conversion[total]} тестовых из 100. Учтены только выбранные задания, сочинение — 0 баллов. Максимум части 1 — 28 первичных → 55 тестовых.`;
@@ -200,3 +232,4 @@
   });
   updateSelection();
 })();
+

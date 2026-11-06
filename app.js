@@ -70,7 +70,8 @@
      "explanation": "«Если …, то …» — условие и его следствие. «Хотя» выражает уступку, «поскольку» — причину."
    }
  ];
- const cards = [...wordChoiceCards, ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])].map(card => ({ ...card, maxPrimary: window.EGE_EXAM_CONFIG.tasks[card.task].maxPrimary }));
+ const stableId = id => 200000 + [...id].reduce((hash, c) => (Math.imul(hash, 31) + c.codePointAt(0)) >>> 0, 0);
+ const cards = [...wordChoiceCards, ...(window.EGE_ADAPTED_CARDS || []), ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])].map(card => ({ ...card, displayId: card.displayId || stableId(card.id), maxPrimary: window.EGE_EXAM_CONFIG.tasks[card.task].maxPrimary }));
  const $=id=>document.getElementById(id);
  const sections=[['all','Все подряд'],['1','1'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение'],['punctuation','Пунктуация']];
  let pool=[],current=null,timer=null,locked=false,correct=0,wrong=0;
@@ -175,7 +176,7 @@
   $('word').classList.toggle('long',(current.prompt || '').length>23||current.kind==='spelling');
   $('context').textContent=current.kind==='spelling'?'':current.context || '';
   $('feedback').textContent='';$('feedback').className='feedback';
-  $('task-label').textContent=`Задание ${current.task}`;
+  $('task-label').textContent=`Задание ${current.task} · #${current.displayId || current.id}`;
   $('options').replaceChildren();
   $('word').classList.toggle('stress-word', current.kind === 'stress');
   if (punctuation) {
@@ -207,7 +208,7 @@
   clearTimeout(timer);timer=null;current=null;locked=false;$('instruction').hidden=true;
   correct=wrong=0;mistakes.clear();$('correct').textContent='0';$('wrong').textContent='0';$('mistake-list').replaceChildren();$('empty').hidden=false;
   for(const b of $('sections').children)b.setAttribute('aria-pressed',String(b.dataset.section===id));
-  pool = id === 'all' ? cards : id === 'stress' ? stressCards : id === 'punctuation' ? (window.EGE_PUNCTUATION || []) : cards.filter(c => c.task === Number(id));
+  pool = id === 'all' ? cards : id === 'stress' ? cards.filter(c => c.kind === 'stress') : id === 'punctuation' ? cards.filter(c => c.kind === 'punctuation') : cards.filter(c => c.task === Number(id));
   if(!pool.length){$('word').textContent='Не удалось загрузить карточки';$('context').textContent='Проверьте, что файл cards.js находится рядом с index.html.';$('skip').hidden=true;return;}
   chooseNext();
  }
@@ -217,4 +218,5 @@
  document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||locked)return;if (e.key === 'Enter' && current?.kind === 'punctuation' && e.target?.tagName !== 'BUTTON') { e.preventDefault(); answer(); return; }const n=Number(e.key);if(n>=1&&n<=9){const b=choices()[n-1];if(b){e.preventDefault();b.click();}}});
  select('all');
 })();
+
 
