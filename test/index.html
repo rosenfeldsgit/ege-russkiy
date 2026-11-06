@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#e7eaf1"><title>Пробники — Ѣ</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css?v=mock1"><link rel="stylesheet" href="test.css?v=1">
+<script defer src="../exam-config.js?v=1"></script><script defer src="bank.js?v=1"></script><script defer src="test.js?v=1"></script>
+</head>
+<body><main class="app exam-app">
+<header><h1><span class="yat">Ѣ</span><span class="heading">подготовка к ЕГЭ</span></h1>
+<nav class="mode-nav" aria-label="Режим тренировки"><a href="../">Карточки</a><a href="./" aria-current="page">Пробники</a></nav></header>
+<section id="setup" class="exam-panel">
+<h2>Собрать пробник</h2><p class="muted">Выберите задания. По одному случайному заданию каждого номера.</p>
+<p class="source">В базе — 52 задания из вариантов 1 и 2 сборника Дощинского 2027.</p>
+<fieldset><legend>Задания части 1</legend><div id="task-picker" class="task-picker"></div></fieldset>
+<div class="selection-actions"><button id="select-all" class="quiet" type="button">Выбрать все</button><button id="clear-all" class="quiet" type="button">Снять выбор</button></div>
+<p id="selection-summary" aria-live="polite"></p><button id="start" class="primary" type="button">Начать пробник</button>
+<p class="muted fine">Время идёт до завершения пробника, включая перерывы. Ответы и результат доступны до обновления страницы.</p>
+</section>
+<section id="session" hidden>
+<div class="exam-toolbar"><span>Общее время <strong id="total-time">00:00</strong></span><span>На задании <strong id="task-time">00:00</strong></span></div>
+<nav id="task-nav" class="task-nav" aria-label="Задания пробника"></nav>
+<article class="exam-panel" aria-labelledby="question-title">
+<div class="question-heading"><h2 id="question-title" tabindex="-1"></h2><span id="weight" class="muted"></span></div>
+<p id="source" class="source"></p>
+<div id="passage" class="passage" hidden></div><div id="question" class="question"></div>
+<label class="answer-label" for="answer">Ответ</label><input id="answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="answer-help"><p id="answer-help" class="muted fine"></p>
+<div class="step-actions"><button id="previous" class="secondary" type="button">Назад</button><button id="next" class="primary" type="button">Далее</button></div>
+</article>
+<div class="finish-area"><button id="finish" class="secondary" type="button">Завершить пробник</button>
+<div id="finish-confirm" class="exam-panel" hidden><p id="finish-message"></p><button id="confirm-finish" class="primary" type="button">Завершить и проверить</button> <button id="cancel-finish" class="quiet" type="button">Продолжить</button></div></div>
+</section>
+<section id="results" class="exam-panel" hidden aria-labelledby="result-title"><h2 id="result-title" tabindex="-1">Результат</h2>
+<div id="result-summary" class="result-summary"></div><p id="conversion" class="muted"></p>
+<div class="table-wrap"><table><caption>Ответы и время по заданиям</caption><thead><tr><th>№</th><th>Ваш ответ</th><th>Верный ответ</th><th>Баллы</th><th>Время</th></tr></thead><tbody id="result-rows"></tbody></table></div>
+<button id="restart" class="primary" type="button">Новый пробник</button></section>
+<noscript>Для прохождения пробника включите JavaScript.</noscript>
+</main></body></html>

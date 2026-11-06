@@ -66,3 +66,6 @@
 @media (max-width: 520px) {
   .word.punctuation-word { font-size: 23px; line-height: 2.3; }
 }
+
+
+.mode-nav{margin:0 auto 25px;gap:8px}.mode-nav a{padding:11px 22px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--muted);background:var(--paper);font-size:15px}.mode-nav a[aria-current=page]{color:var(--paper);background:var(--ink);border-color:var(--ink)}

@@ -70,7 +70,7 @@
      "explanation": "«Если …, то …» — условие и его следствие. «Хотя» выражает уступку, «поскольку» — причину."
    }
  ];
- const cards = [...wordChoiceCards, ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])];
+ const cards = [...wordChoiceCards, ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])].map(card => ({ ...card, maxPrimary: window.EGE_EXAM_CONFIG.tasks[card.task].maxPrimary }));
  const $=id=>document.getElementById(id);
  const sections=[['all','Все подряд'],['1','1'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение'],['punctuation','Пунктуация']];
  let pool=[],current=null,timer=null,locked=false,correct=0,wrong=0;
@@ -217,3 +217,4 @@
  document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||locked)return;if (e.key === 'Enter' && current?.kind === 'punctuation' && e.target?.tagName !== 'BUTTON') { e.preventDefault(); answer(); return; }const n=Number(e.key);if(n>=1&&n<=9){const b=choices()[n-1];if(b){e.preventDefault();b.click();}}});
  select('all');
 })();
+
