@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ege
+      POSTGRES_USER: ege
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ege -d ege"]
+      interval: 5s
+      retries: 20
+  web:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DOMAIN:?Set DOMAIN}
+      DJANGO_CSRF_ORIGINS: https://${DOMAIN}
+      POSTGRES_DB: ege
+      POSTGRES_USER: ege
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EGE_DATA_DIR: /data
+    volumes:
+      - appdata:/data
+    depends_on:
+      db:
+        condition: service_healthy
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - appdata:/srv:ro
+      - certificates:/data
+      - caddyconfig:/config
+    depends_on: [web]
+volumes:
+  database:
+  appdata:
+  certificates:
+  caddyconfig:

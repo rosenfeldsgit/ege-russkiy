@@ -1,7 +1,10 @@
 'use strict';
 (() => {
-  const config = window.EGE_EXAM_CONFIG;
-  const bank = window.EGE_EXAM_BANK;
+  const managed = window.EGE_MANAGED || {exams:[],disabled:[],tasks:{}};
+  const config = {...window.EGE_EXAM_CONFIG, tasks:{...window.EGE_EXAM_CONFIG.tasks,...managed.tasks}};
+  const overrides = new Map(managed.exams.map(q=>[q.id,q]));
+  const existing = window.EGE_EXAM_BANK || [];
+  const bank = [...existing.filter(q=>!managed.disabled.includes(q.id)).map(q=>overrides.get(q.id)||q),...managed.exams.filter(q=>!existing.some(old=>old.id===q.id))];
   const $ = id => document.getElementById(id);
   let session = null;
   let interval = null;
@@ -89,8 +92,10 @@
     // Номера, опирающиеся на один текст, получают общий вариант источника.
     const variants = {};
     const questions = numbers.map(task => {
-      const group = task <= 3 ? 'text-1-3' : task >= 23 ? 'text-23-26' : String(task);
-      const candidates = bank.filter(q => q.task === task);
+      const group = task <= 3 ? 'text-1-3' : task >= 23 && task <= 26 ? 'text-23-26' : String(task);
+      const related = numbers.filter(n => task <= 3 ? n <= 3 : task >= 23 && task <= 26 ? n >= 23 && n <= 26 : n === task);
+      const candidates = bank.filter(q => q.task === task && related.every(n => bank.some(other => other.task === n && other.source.variant === q.source.variant)));
+      if (!candidates.length) throw new Error('Нет полного комплекта заданий для общего текста');
       if (!variants[group]) variants[group] = randomItem(candidates).source.variant;
       return randomItem(candidates.filter(q => q.source.variant === variants[group]));
     });
@@ -214,7 +219,7 @@
     $('task-picker').querySelectorAll('input').forEach(input => input.checked = false);
     updateSelection();
   });
-  $('start').addEventListener('click', start);
+  $('start').addEventListener('click', () => {try {start();} catch(error) {$('selection-summary').textContent=error.message;}});
   $('answer').addEventListener('input', () => {
     session.answers[session.index] = $('answer').value;
     updateNavigation();

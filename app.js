@@ -71,9 +71,14 @@
    }
  ];
  const stableId = id => 200000 + [...id].reduce((hash, c) => (Math.imul(hash, 31) + c.codePointAt(0)) >>> 0, 0);
- const cards = [...wordChoiceCards, ...(window.EGE_ADAPTED_CARDS || []), ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])].map(card => ({ ...card, displayId: card.displayId || stableId(card.id), maxPrimary: window.EGE_EXAM_CONFIG.tasks[card.task].maxPrimary }));
+ const managed = window.EGE_MANAGED || {cards:[],disabled:[],tasks:{}};
+ const overrides = new Map(managed.cards.map(c => [c.id,c]));
+ const staticCards = [...wordChoiceCards, ...(window.EGE_ADAPTED_CARDS || []), ...(window.EGE_CARDS || []), ...stressCards, ...(window.EGE_PUNCTUATION || [])];
+ const staticIds = new Set(staticCards.map(c=>c.id));
+ const cards = [...staticCards,...managed.cards.filter(c=>!staticIds.has(c.id))].filter(c => !managed.disabled.includes(c.id)).map(c => overrides.get(c.id) || c).map(card => ({ ...card, displayId: card.displayId || stableId(card.id), maxPrimary: (managed.tasks[card.task] || window.EGE_EXAM_CONFIG.tasks[card.task] || {maxPrimary:1}).maxPrimary }));
  const $=id=>document.getElementById(id);
  const sections=[['all','Все подряд'],['1','1'],...Array.from({length:7},(_,i)=>[String(i+9),String(i+9)]),['stress','Ударение'],['punctuation','Пунктуация']];
+ for (const task of Object.values(managed.tasks)) { if (!sections.some(s=>s[0]===String(task.number)) && cards.some(c=>c.task===task.number)) sections.splice(sections.length-2,0,[String(task.number),String(task.number)]); }
  let pool=[],current=null,timer=null,locked=false,correct=0,wrong=0;
  const mistakes=new Map();
  let selectedSlots = new Set();
@@ -82,7 +87,7 @@
  function solution(node,c){if(c.kind === 'punctuation'){node.replaceChildren();c.parts.forEach((part,index)=>{node.append(document.createTextNode(part));if(index<c.parts.length-1){if(c.answer.includes(index)){const m=document.createElement('mark');m.textContent=c.mark==='—'?' —':c.mark;node.append(m);}node.append(document.createTextNode(' '));}});return;}node.replaceChildren(document.createTextNode(c.before));const m=document.createElement('mark');m.textContent=c.spelling||c.answer;node.append(m,document.createTextNode(c.after));}
  function addExplanation(item, word, card) {
    let hint = card.explanation || window.EGE_HINTS?.get(card.id);
-   if (card.kind === 'stress') {
+   if (card.kind === 'stress' && !hint) {
      const syllable = (card.before.match(/[аеёиоуыэюя]/g) || []).length + 1;
      hint = 'Словарное ударение падает на ' + syllable + '-й слог: ' +
        card.before + card.spelling.toUpperCase() + card.after + '.';
@@ -176,7 +181,7 @@
   $('word').classList.toggle('long',(current.prompt || '').length>23||current.kind==='spelling');
   $('context').textContent=current.kind==='spelling'?'':current.context || '';
   $('feedback').textContent='';$('feedback').className='feedback';
-  $('task-label').textContent=`Задание ${current.task} · #${current.displayId || current.id}`;
+  $('task-label').textContent=`Задание ${current.task}`;
   $('options').replaceChildren();
   $('word').classList.toggle('stress-word', current.kind === 'stress');
   if (punctuation) {
