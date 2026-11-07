@@ -756,7 +756,10 @@
       else if(s==='недолюбливать')hint='Недолюбливать (= испытывать неприязнь) — цельный глагол, слитно. Запомнить.';
       else if(/без НЕ не употреб/.test(old)||['ненавидящий','ненависть','непрерывно','необходимость','неотъемлемый'].includes(s))hint='Запомнить цельное слово «'+s+'»: НЕ пишется слитно.';
     }
-    if(c.task===14)hint=joins[String(c.spelling||c.answer).toLowerCase()]||hint;
+    if(c.task===14) {
+      hint=joins[String(c.spelling||c.answer).toLowerCase()]||hint;
+      if (/^полу/i.test(c.spelling || '')) hint='ПОЛУ- всегда пишется слитно.';
+    }
     if(c.kind==='stress'&&c.id?.startsWith('exam-card-')){
       const form=c.before+c.spelling.toUpperCase()+c.after;
       hint='Запомнить ударение: '+form+'.';
