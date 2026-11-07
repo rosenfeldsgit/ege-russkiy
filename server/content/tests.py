@@ -53,3 +53,9 @@ class AdminFlow(TestCase):
         self.client.post('/admin/content/card/add/',self.card_data())
         self.assertEqual(Card.objects.values('pk').distinct().count(),2)
         first.refresh_from_db();self.assertEqual(first.pk,first_id)
+
+    def test_public_explanations_are_served(self):
+        for path in ['prefix-explanations.js','audited-explanations.js','exam-explanations.js','reasoned-explanations.js']:
+            response=self.client.get('/'+path)
+            self.assertEqual(response.status_code,200,path)
+            response.close()

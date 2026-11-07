@@ -10,7 +10,7 @@ def content_js(request):
     response['Cache-Control']='no-store'
     return response
 
-PUBLIC_FILES={'index.html','app.js','styles.css','favicon.svg','cards.js','explanations.js','punctuation.js','adapted-cards.js','exam-config.js','test/index.html','test/test.css','test/test.js','test/bank.js'}
+PUBLIC_FILES={'index.html','app.js','styles.css','favicon.svg','cards.js','explanations.js','punctuation.js','adapted-cards.js','exam-config.js','prefix-explanations.js','audited-explanations.js','exam-explanations.js','reasoned-explanations.js','test/index.html','test/test.css','test/test.js','test/bank.js'}
 def public_file(request,path='index.html'):
     if path in ('','test/'):path=path+'index.html'
     if path not in PUBLIC_FILES:raise Http404
