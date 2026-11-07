@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self,*args,**kwargs):
         script=r'''
 const fs=require('fs'),vm=require('vm');const ctx={window:{}};
-for(const p of ['exam-config.js','cards.js','explanations.js','punctuation.js','adapted-cards.js','test/bank.js']){if(fs.existsSync(p))vm.runInNewContext(fs.readFileSync(p,'utf8'),ctx);}
+for(const p of ['exam-config.js','cards.js','explanations.js','punctuation.js','adapted-cards.js','test/bank.js','prefix-explanations.js']){if(fs.existsSync(p))vm.runInNewContext(fs.readFileSync(p,'utf8'),ctx);}
 const app=fs.readFileSync('app.js','utf8');
 const words=app.match(/const stressWords = `([\s\S]*?)`\.trim/)[1].trim().split(/\s+/);
 const stress=words.map(form=>{const pos=form.search(/[АЕЁИОУЫЭЮЯ]/),word=form.toLowerCase();return {id:'stress-'+form,task:4,kind:'stress',prompt:word,before:word.slice(0,pos),after:word.slice(pos+1),spelling:word[pos],answer:String(pos),context:form==='Отзыв'?'о книге':form==='отзЫв'?'посла из страны':''};});
