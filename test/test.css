@@ -8,3 +8,5 @@
 .review-answer{font:400 28px/1.4 Georgia,serif;color:var(--green);margin:22px 0 12px}
 .review-explanation{font-size:20px;line-height:1.55;margin:12px 0 18px;padding-top:16px}
 @media(max-width:520px){.review-question .question{font-size:13px}.review-answer{font-size:25px}.review-explanation{font-size:18px}}
+
+.matching-columns{display:grid;grid-template-columns:1fr 1fr;gap:26px;white-space:normal}.matching-columns h3{font:500 14px/1.5 system-ui;color:var(--muted);margin:0 0 14px}.matching-columns section>div{white-space:pre-wrap;overflow-wrap:anywhere}.question>p{margin:0 0 22px}@media(max-width:650px){.matching-columns{grid-template-columns:1fr;gap:24px}}

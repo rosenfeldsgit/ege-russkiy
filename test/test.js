@@ -3,7 +3,8 @@
   const managed = window.EGE_MANAGED || {exams:[],disabled:[],tasks:{}};
   const config = {...window.EGE_EXAM_CONFIG, tasks:{...window.EGE_EXAM_CONFIG.tasks,...managed.tasks}};
   const overrides = new Map(managed.exams.map(q=>[q.id,q]));
-  const existing = window.EGE_EXAM_BANK || [];
+  const existing = [...(window.EGE_EXAM_BANK || []), ...(window.EGE_EXAM_MANIFEST || [])];
+  let preparing = false;
   const bank = [...existing.filter(q=>!managed.disabled.includes(q.id)).map(q=>overrides.get(q.id)||q),...managed.exams.filter(q=>!existing.some(old=>old.id===q.id))];
   const $ = id => document.getElementById(id);
   let session = null;
@@ -66,6 +67,20 @@
       node.append(element);
     });
   }
+  function renderQuestion(node,question) {
+    const match=question.answerType==='matching' && question.prompt.match(/^([\s\S]+?)\n\n(Грамматические ошибки|Предложения)\n([\s\S]+?)\n\n(Предложения|Средства выразительности)\n([\s\S]+)$/);
+    if (!match) {formattedText(node,question.prompt);return;}
+    node.replaceChildren();
+    const intro=document.createElement('p');intro.textContent=match[1];node.append(intro);
+    const columns=document.createElement('div');columns.className='matching-columns';
+    for (const [title,text] of [[match[2],match[3]],[match[4],match[5]]]) {
+      const column=document.createElement('section');
+      const heading=document.createElement('h3');heading.textContent=title;
+      const body=document.createElement('div');formattedText(body,text);
+      column.append(heading,body);columns.append(column);
+    }
+    node.append(columns);
+  }
   function showQuestion(index, focus = true) {
     saveTime();
     session.index = index;
@@ -75,7 +90,7 @@
     $('source').textContent = question.source.title;
     formattedText($('passage'), question.passage || '');
     $('passage').hidden = !question.passage;
-    formattedText($('question'), question.prompt);
+    renderQuestion($('question'),question);
     $('answer').value = session.answers[index];
     $('answer').inputMode = question.answerType === 'word' ? 'text' : 'numeric';
     $('answer-help').textContent = question.answerType === 'matching' ? 'Пять цифр в порядке А, Б, В, Г, Д.' : question.answerType === 'word' ? 'Слово или сочетание слов.' : 'Запишите цифры без пробелов и запятых.';
@@ -86,12 +101,12 @@
     updateClock();
     if (focus) $('question-title').focus();
   }
-  function start() {
+  async function start() {
     const numbers = selection();
     if (!numbers.length) return;
     // Номера, опирающиеся на один текст, получают общий вариант источника.
     const variants = {};
-    const questions = numbers.map(task => {
+    const selected = numbers.map(task => {
       const group = task <= 3 ? 'text-1-3' : task >= 23 && task <= 26 ? 'text-23-26' : String(task);
       const related = numbers.filter(n => task <= 3 ? n <= 3 : task >= 23 && task <= 26 ? n >= 23 && n <= 26 : n === task);
       const candidates = bank.filter(q => q.task === task && related.every(n => bank.some(other => other.task === n && other.source.variant === q.source.variant)));
@@ -99,6 +114,7 @@
       if (!variants[group]) variants[group] = randomItem(candidates).source.variant;
       return randomItem(candidates.filter(q => q.source.variant === variants[group]));
     });
+    const questions = await Promise.all(selected.map(window.EGE_EXAM_LOADER.load));
     const now = performance.now();
     session = { questions, answers: questions.map(() => ''), elapsed: questions.map(() => 0), index: 0, startedAt: now, enteredAt: now, finished: false };
     $('setup').hidden = true;
@@ -155,11 +171,11 @@
       detailCell.colSpan = 5;
       const review = document.createElement('article');
       review.className = 'review-question';
-      for (const text of [question.passage, question.prompt]) {
+      for (const [key,text] of [["passage",question.passage], ["prompt",question.prompt]]) {
         if (!text) continue;
         const block = document.createElement('div');
         block.className = 'question';
-        formattedText(block, text);
+        if (key==='prompt') renderQuestion(block,question); else formattedText(block,text);
         review.append(block);
       }
       const correctAnswer = document.createElement('p');
@@ -168,7 +184,7 @@
       review.append(correctAnswer);
       const explanation = document.createElement('p');
       explanation.className = 'review-explanation';
-      explanation.textContent = question.explanation;
+      explanation.textContent = question.explanation || 'Ответ проверен по ключу сборника. Подробный разбор пока не добавлен.';
       review.append(explanation);
       detailCell.append(review);
       detailRow.append(detailCell);
@@ -219,7 +235,12 @@
     $('task-picker').querySelectorAll('input').forEach(input => input.checked = false);
     updateSelection();
   });
-  $('start').addEventListener('click', () => {try {start();} catch(error) {$('selection-summary').textContent=error.message;}});
+  $('start').addEventListener('click', async () => {
+    if (preparing) return;
+    preparing=true;$('start').disabled=true;$('start').textContent='Подготовка…';
+    try {await start();} catch(error) {$('selection-summary').textContent=error.message;}
+    finally {preparing=false;$('start').textContent='Начать пробник';updateSelection();}
+  });
   $('answer').addEventListener('input', () => {
     session.answers[session.index] = $('answer').value;
     updateNavigation();
